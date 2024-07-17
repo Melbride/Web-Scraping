@@ -164,8 +164,6 @@ filtered_df = df[df['Discount'] >= discount_filter]
 
 st.dataframe(filtered_df)
 
-if __name__ == "__main__":
-    main()
 
 
 
