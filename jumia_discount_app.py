@@ -1,25 +1,14 @@
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-import smtplib
+import time
 import streamlit as st
-
 
 URL = 'https://www.jumia.co.ke/'
 
 headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
-response = requests.get(URL)
-#r = requests.get('https://www.jumia.co.ke/phones-tablets/')
-
-soup = BeautifulSoup(response.content, 'html.parser')
-
-#soup1
-
-#soup2 = BeautifulSoup(soup1.prettify(), 'html.parser')
-
-#soup2
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+}
 
 categories = [
     "/mlp-jumia-official-stores/",
@@ -61,43 +50,7 @@ def scrape_page(url):
     
     return product_list
 
-
-#productlist = soup2.find_all('div', class_='itm')
-
-#productlist
-
-#for item in productlist:
-    #for link in item.find_all('a', href=True):
-        #productlinks.append(URL + link['href'])
-#print(len(productlinks))
-
-#for category in categories:
-    #page = 1
-    #while True:
-        #category_url = URL + category + f"?page={page}#catalog-listing"
-        #r = requests.get(category_url)
-        #soup = BeautifulSoup(content, 'html.parser')
-        #productlist = soup.find_all('div', class_='itm')
-        #if not productlist:
-            #break
-        #for item in productlist:
-            #link = item.find('a', href=True)
-            #if link:
-                #productlinks.append(URL + link['href'])
-        #page += 1
-
-#print(len(productlinks))
-#print(productlinks)
-
-#testlink = 'https://www.jumia.co.ke//fashion-womens-casual-flat-loafer-walking-shoes-platform-brogue-shoes-for-girls-women-177745929.html'
-#r = requests.get(testlink, headers=headers)
-#soup = BeautifulSoup(r.content, 'html.parser')
-
-#product_name = soup.find('h3', class_='name').text.strip()
-#print(product_name)
-
-import time
-def scrape_all_products(categories, timeout_seconds=300):
+def scrape_all_products(categories, timeout_seconds=60):
     start_time = time.time()
     all_products = []
 
@@ -128,43 +81,37 @@ def scrape_all_products(categories, timeout_seconds=300):
     return all_products
 
 try:
-    # Scraping all products from specified categories with a 10-second timeout
-    all_products = scrape_all_products(categories, timeout_seconds=300)
+    # Scraping all products from specified categories with a timeout
+    all_products = scrape_all_products(categories, timeout_seconds=60)
 
     # Saving scraped data to CSV
     df = pd.DataFrame(all_products)
     df.to_csv('jumia_discount_products2.csv', index=False)
 
     print("Scraping and CSV export complete.")
-    print(df.head())  # Print the first few rows of the DataFrame to verify
+    # Print the first few rows of the DataFrame to verify
+    print(df.head())
 
 except Exception as e:
     print(f"An error occurred: {e}")
 
-#df
+# Streamlit app code---view the products under localhost using streamlit
+def main():
+    st.title("Jumia Discount Products")
+    
+    # Reading the DataFrame
+    df = pd.read_csv('jumia_discount_products2.csv')
 
-df.isnull().sum()
+    # Handling 'No discount' and convert Discount column to integers
+    df['Discount'] = df['Discount'].astype(str)
+    df['Discount'] = df['Discount'].str.replace('No discount', '0').str.replace('%', '').astype(int)
+    
+    st.dataframe(df)
+    
+    discount_filter = st.slider('Discount Percentage', 0, 100, 50)
+    filtered_df = df[df['Discount'] >= discount_filter]
+    
+    st.dataframe(filtered_df)
 
-df['Name'].dtypes
-
-df['Price'].dtypes
-
-st.title("Jumia Discount Products")
-st.dataframe(df)
-
-df['Discount'] = df['Discount'].astype(str)
-
-df['Discount'] = df['Discount'].str.replace('No discount', '0').str.replace('%', '').astype(int)
-
-st.title("Jumia Discount Products")
-st.dataframe(df)
-
-discount_filter = st.slider('Discount Percentage', 0, 100, 50)
-filtered_df = df[df['Discount'] >= discount_filter]
-
-st.dataframe(filtered_df)
-
-
-
-
-
+if __name__ == "__main__":
+    main()
