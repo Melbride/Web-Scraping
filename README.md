@@ -1,2 +1,2 @@
 # Web-Scraping
-jumia scraping demo
+My Web_Scraping startup project.
